@@ -30,8 +30,8 @@ def wszystkie_wariacje(N, m):
 
 # przykład
 n = 5
-m = 4
-print("ilosc porzodkow: ", iloscPorzodkow(n,m))
+m = 3
+print("ilosc porzodkow: ", iloscPorzodkow(n,n-m))
 wszystkie_wariacje(n, m)
 
 ####### PODPUNKT 2 ###################
@@ -49,7 +49,7 @@ def ilosc_komb_powt(n, k):
 
 
 n = 5
-k = 4
+k = 3
 
 komb = [0] * k
 count = 0
@@ -64,8 +64,7 @@ def kombinacje_powt(pozycja, start):
 
     for i in range(start, n + 1):
         komb[pozycja] = i
-        kombinacje_powt(pozycja + 1, i)  # 👈 powtórzenia dozwolone
-
+        kombinacje_powt(pozycja + 1, i)  #powtórzenia dozwolone
 
 if __name__ == '__main__':
     main()
