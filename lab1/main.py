@@ -1,3 +1,5 @@
+import math
+
 ##############  PODPUNKT 1 #################
 def iloscPorzodkow(n,m):
     silnia = 1
@@ -47,13 +49,11 @@ def ilosc_komb_powt(n, k):
         wynik = wynik * (n + i - 1) // i
     return wynik
 
-
 n = 5
 k = 3
 
 komb = [0] * k
 count = 0
-
 
 def kombinacje_powt(pozycja, start):
     global count
@@ -68,3 +68,100 @@ def kombinacje_powt(pozycja, start):
 
 if __name__ == '__main__':
     main()
+
+#### PODPUNKT 3 #########################
+class City:
+    def __init__(self, id: int, name: str, population: int, lat: float, lon: float):
+        self.id = id
+        self.name = name
+        self.population = population
+        self.lat = lat
+        self.lon = lon
+
+    def __str__(self):
+        return self.name
+
+    def distance(self, other):
+        return ((self.lat - other.lat)**2 + (self.lon - other.lon)**2)**0.5
+
+
+# ---------- WCZYTYWANIE ----------
+def wczytaj_miasta(plik, n):
+    miasta = []
+    with open(plik, "r") as f:
+        next(f)
+        for line in f.readlines()[:n]:
+            d = line.split()
+            miasta.append(City(int(d[0]), d[1], int(d[2]), float(d[3]), float(d[4])))
+    return miasta
+
+
+# ---------- DŁUGOŚĆ CYKLU ----------
+def dlugosc_trasy(trasa, miasta):
+    suma = 0
+    for i in range(len(trasa) - 1):
+        suma += miasta[trasa[i]].distance(miasta[trasa[i+1]])
+    suma += miasta[trasa[-1]].distance(miasta[trasa[0]])
+    return suma
+
+
+# ---------- PERMUTACJE ----------
+def permutacje(arr, start, best, miasta):
+    if start == len(arr):
+        d = dlugosc_trasy(arr, miasta)
+        if d < best[0]:
+            best[0] = d
+            best[1] = arr[:]
+        return
+
+    for i in range(start, len(arr)):
+        arr[start], arr[i] = arr[i], arr[start]
+        permutacje(arr, start + 1, best, miasta)
+        arr[start], arr[i] = arr[i], arr[start]
+
+
+# ---------- KOMBINACJE ----------
+def kombinacje(n, m, start, aktualne, wynik):
+    if len(aktualne) == m:
+        wynik.append(aktualne[:])
+        return
+
+    for i in range(start, n):
+        aktualne.append(i)
+        kombinacje(n, m, i + 1, aktualne, wynik)
+        aktualne.pop()
+
+
+# ---------- MAIN ----------
+def tsp_dla_podzbiorow(plik, n, m):
+    miasta = wczytaj_miasta(plik, n)
+
+    podzbiory = []
+    kombinacje(n, m, 0, [], podzbiory)
+
+    global_best = [float('inf'), None]
+
+    for subset in podzbiory:
+        perm = subset[:]  # kopia!
+
+        best_local = [float('inf'), None]
+
+        # KLUCZ: fixujemy pierwszy element
+        permutacje(perm, 1, best_local, miasta)
+
+        # zapis najlepszego
+        if best_local[1] is not None and best_local[0] < global_best[0]:
+            global_best[0] = best_local[0]
+            global_best[1] = best_local[1][:]
+
+    # wynik
+    if global_best[1] is None:
+        print("Nie znaleziono trasy!")
+    else:
+        najlepsza_trasa = [str(miasta[i]) for i in global_best[1]]
+        print("Najlepsza trasa:", najlepsza_trasa)
+        print("Długość:", global_best[0])
+
+
+# ---------- URUCHOMIENIE ----------
+tsp_dla_podzbiorow("MPI lab 1 - spain.txt", n=6, m=6)
