@@ -165,3 +165,37 @@ def tsp_dla_podzbiorow(plik, n, m):
 
 # ---------- URUCHOMIENIE ----------
 tsp_dla_podzbiorow("MPI lab 1 - spain.txt", n=6, m=6)
+
+
+#PODPUNKT 4######################3
+import random
+
+def suma_populacji_bez_powtorzen(miasta, kombinacja):
+    return sum(miasta[i].population for i in set(kombinacja))
+
+
+def prawdopodobienstwo(plik, n, m, proby=100000):
+    miasta = wczytaj_miasta(plik, n)
+
+    total_pop = sum(city.population for city in miasta)
+    dol = 0.4 * total_pop
+    gora = 0.6 * total_pop
+
+    trafione = 0
+
+    for _ in range(proby):
+        # losowanie z powtórzeniami
+        kombinacja = [random.randint(0, n-1) for _ in range(m)]
+
+        # liczenie bez powtórzeń
+        pop = suma_populacji_bez_powtorzen(miasta, kombinacja)
+
+        if dol <= pop <= gora:
+            trafione += 1
+
+    return trafione / proby
+
+
+# uruchomienie
+p = prawdopodobienstwo("MPI lab 1 - spain.txt", n=6, m=4)
+print("Prawdopodobieństwo:", p)
