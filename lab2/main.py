@@ -201,10 +201,10 @@ def mississippi_mc(trials=100000):
 # =========================
 # MAIN TEST
 # =========================
-N = 10000
+N = 100000
 K = 10
 
-lin = LinearGenerator(16807, 0, 2**31 - 1, seed=1)
+lin = LinearGenerator(16807, 0, 2**31-1, seed=15)
 reg = RegisterGenerator(7, 3, seed=15)
 
 lin_data = [lin.generate_probability() for _ in range(N)]
@@ -213,9 +213,17 @@ reg_data = [reg.generate_probability() for _ in range(N)]
 lin_buckets = split_into_buckets(lin_data, K)
 reg_buckets = split_into_buckets(reg_data, K)
 
+print("\nLinear generator buckets:")
+for b in lin_buckets:
+    print(f"[{b.min:.2f}, {b.max:.2f}): {b.count}")
+
+print("\nRegister generator buckets:")
+for b in reg_buckets:
+    print(f"[{b.min:.2f}, {b.max:.2f}): {b.count}")
+
 print("Chi2 linear:", chi_square_test(lin_buckets, N))
 print("Chi2 register:", chi_square_test(reg_buckets, N))
 
 print("Monte Carlo heads:", monte_carlo_heads(1000000, 10, 3))
 print("Area:", monte_carlo_area(100000, 0.5))
-print("Mississippi:", mississippi_mc(1000000))  # heavy!
+print("Mississippi:", mississippi_mc(1000000))
