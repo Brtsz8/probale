@@ -205,7 +205,7 @@ N = 100000
 K = 10
 
 lin = LinearGenerator(16807, 0, 2**31-1, seed=15)
-reg = RegisterGenerator(7, 3, seed=15)
+reg = RegisterGenerator(17, 3, seed=15)
 
 lin_data = [lin.generate_probability() for _ in range(N)]
 reg_data = [reg.generate_probability() for _ in range(N)]
@@ -224,6 +224,6 @@ for b in reg_buckets:
 print("Chi2 linear:", chi_square_test(lin_buckets, N))
 print("Chi2 register:", chi_square_test(reg_buckets, N))
 
-print("Monte Carlo heads:", monte_carlo_heads(1000000, 10, 3))
+print("Monte Carlo heads:", monte_carlo_heads(100000, 10, 3))
 print("Area:", monte_carlo_area(100000, 0.5))
 print("Mississippi:", mississippi_mc(1000000))
