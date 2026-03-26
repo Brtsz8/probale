@@ -1,222 +1,201 @@
-import random
 import math
-from collections import Counter
-from itertools import permutations
+
+##############  PODPUNKT 1 #################
+def iloscPorzodkow(n,m):
+    silnia = 1
+    while n > m:
+        silnia *= n
+        n -= 1
+    return silnia
+
+def wariacje(miasta, m, aktualne, used, licznik):
+    if len(aktualne) == m:
+        licznik[0] += 1
+        print(f"{licznik[0]}: {tuple(aktualne)}")
+        return
+
+    for i in range(len(miasta)):
+        if not used[i]:
+            used[i] = True
+            aktualne.append(miasta[i])
+            wariacje(miasta, m, aktualne, used, licznik)
+            aktualne.pop()
+            used[i] = False
 
 
-# =========================
-# PODSTAWA 1
-# Generator liniowy
-# =========================
-class LinearGenerator:
-    def __init__(self, a: int, c: int, m: int, seed: int = 1):
-        self.a = a
-        self.c = c
-        self.m = m
-        self.seed = seed
-
-    # generate next integer
-    def __generate_number(self) -> int:
-        self.seed = (self.a * self.seed + self.c) % self.m
-        return self.seed
-
-    # return number in (0,1)
-    def generate_probability(self) -> float:
-        return self.__generate_number() / self.m
-
-    def generate_probabilities(self, n: int):
-        for _ in range(n):
-            yield self.generate_probability()
-
-    def generate_number(self, m: int = None) -> int:
-        if m is None:
-            m = self.m
-        return int(m * self.generate_probability())
+def wszystkie_wariacje(N, m):
+    miasta = list(range(1, N + 1))
+    used = [False] * N
+    licznik = [0]
+    wariacje(miasta, m, [], used, licznik)
 
 
-# =========================
-# PODSTAWA 2
-# Generator rejestrowy (LFSR)
-# =========================
-class RegisterGenerator:
-    def __init__(self, p: int, q: int, seed: int = 2**31, accuracy: int = 31):
-        self.p = p
-        self.q = q
-        self.size = p + q
-        self.seed = seed
-        self.accuracy = accuracy
+# przykład
+n = 5
+m = 3
+print("ilosc porzodkow: ", iloscPorzodkow(n,n-m))
+wszystkie_wariacje(n, m)
 
-    # generate single bit
-    def __generate_bit(self) -> int:
-        p_bit = (self.seed >> (self.p - 1)) & 1
-        q_bit = (self.seed >> (self.q - 1)) & 1
-
-        bit = p_bit ^ q_bit  # xor
-
-        # shift register
-        self.seed >>= 1
-        self.seed |= bit << self.size
-
-        return bit
-
-    # build float number from bits
-    def generate_probability(self) -> float:
-        result = 0
-        weight = 0.5
-
-        for _ in range(self.accuracy):
-            if self.__generate_bit() == 1:
-                result += weight
-            weight /= 2
-
-        return result
+####### PODPUNKT 2 ###################
+def main():
+    print("Liczba podzbiorów (z powtórzeniami):", ilosc_komb_powt(n, k))
+    kombinacje_powt(0, 1)
 
 
-# =========================
-# WSPOLNE: buckety
-# =========================
-class Bucket:
-    def __init__(self, min_val, max_val):
-        self.min = min_val
-        self.max = max_val
-        self.count = 0
+def ilosc_komb_powt(n, k):
+    # (n+k-1 choose k)
+    wynik = 1
+    for i in range(1, k + 1):
+        wynik = wynik * (n + i - 1) // i
+    return wynik
+
+n = 5
+k = 3
+
+komb = [0] * k
+count = 0
+
+def kombinacje_powt(pozycja, start):
+    global count
+    if pozycja == k:
+        count += 1
+        print(count, tuple(komb))
+        return
+
+    for i in range(start, n + 1):
+        komb[pozycja] = i
+        kombinacje_powt(pozycja + 1, i)  #powtórzenia dozwolone
+
+if __name__ == '__main__':
+    main()
+
+#### PODPUNKT 3 #########################
+class City:
+    def __init__(self, id: int, name: str, population: int, lat: float, lon: float):
+        self.id = id
+        self.name = name
+        self.population = population
+        self.lat = lat
+        self.lon = lon
+
+    def __str__(self):
+        return self.name
+
+    def distance(self, other):
+        return ((self.lat - other.lat)**2 + (self.lon - other.lon)**2)**0.5
 
 
-def split_into_buckets(data, bucket_count):
-    buckets = [Bucket(i / bucket_count, (i + 1) / bucket_count) for i in range(bucket_count)]
-
-    for x in data:
-        index = min(int(x * bucket_count), bucket_count - 1)
-        buckets[index].count += 1
-
-    return buckets
-
-
-# =========================
-# TEST CHI-KWADRAT (brakowalo)
-# =========================
-def chi_square_test(buckets, n):
-    expected = n / len(buckets)
-    chi2 = 0
-
-    for b in buckets:
-        chi2 += (b.count - expected) ** 2 / expected
-
-    return chi2
+# ---------- WCZYTYWANIE ----------
+def wczytaj_miasta(plik, n):
+    miasta = []
+    with open(plik, "r") as f:
+        next(f)
+        for line in f.readlines()[:n]:
+            d = line.split()
+            miasta.append(City(int(d[0]), d[1], int(d[2]), float(d[3]), float(d[4])))
+    return miasta
 
 
-# =========================
-# UZUPELNIENIE 1u
-# Monte Carlo - K orlow pod rzad
-# =========================
-def monte_carlo_heads(N, I, K):
-    success = 0
-
-    for _ in range(N):
-        seq = [random.choice(["H", "T"]) for _ in range(I)]
-
-        # check if sequence contains K heads in row
-        for i in range(I - K + 1):
-            if all(x == "H" for x in seq[i:i+K]):
-                success += 1
-                break
-
-    return success / N
+# ---------- DŁUGOŚĆ CYKLU ----------
+def dlugosc_trasy(trasa, miasta):
+    suma = 0
+    for i in range(len(trasa) - 1):
+        suma += miasta[trasa[i]].distance(miasta[trasa[i+1]])
+    suma += miasta[trasa[-1]].distance(miasta[trasa[0]])
+    return suma
 
 
-# =========================
-# UZUPELNIENIE 2u
-# pole czesci wspolnej kol
-# =========================
-def monte_carlo_area(N, R):
-    inside = 0
+# ---------- PERMUTACJE ----------
+def permutacje(arr, start, best, miasta):
+    if start == len(arr):
+        d = dlugosc_trasy(arr, miasta)
+        if d < best[0]:
+            best[0] = d
+            best[1] = arr[:]
+        return
 
-    for _ in range(N):
-        x = random.random()
-        y = random.random()
-
-        # circle 1 (center 0.5,0.5 radius 1)
-        c1 = (x - 0.5)**2 + (y - 0.5)**2 <= 1
-
-        # circle 2 (center 0,0 radius R)
-        c2 = x**2 + y**2 <= R**2
-
-        if c1 and c2:
-            inside += 1
-
-    return inside / N
+    for i in range(start, len(arr)):
+        arr[start], arr[i] = arr[i], arr[start]
+        permutacje(arr, start + 1, best, miasta)
+        arr[start], arr[i] = arr[i], arr[start]
 
 
-# =========================
-# DODATKOWE 3
-# Mississippi permutation
-# =========================
-def mississippi_probability():
-    word = "mississippi"
+# ---------- KOMBINACJE ----------
+def kombinacje(n, m, start, aktualne, wynik):
+    if len(aktualne) == m:
+        wynik.append(aktualne[:])
+        return
 
-    perms = set(permutations(word))
-    good = 0
+    for i in range(start, n):
+        aktualne.append(i)
+        kombinacje(n, m, i + 1, aktualne, wynik)
+        aktualne.pop()
 
-    for p in perms:
-        ok = True
-        for i in range(len(p)-1):
-            if p[i] == p[i+1]:
-                ok = False
-                break
-        if ok:
-            good += 1
 
-    return good / len(perms)
+# ---------- MAIN ----------
+def tsp_dla_podzbiorow(plik, n, m):
+    miasta = wczytaj_miasta(plik, n)
 
-def mississippi_mc(trials=100000):
-    base = Counter("mississippi")
-    good = 0
+    podzbiory = []
+    kombinacje(n, m, 0, [], podzbiory)
 
-    for _ in range(trials):
-        counts = base.copy()
-        word = []
+    global_best = [float('inf'), None]
 
-        # build permutation step by step
-        for _ in range(11):
-            letters = list(counts.keys())
-            weights = list(counts.values())
+    for subset in podzbiory:
+        perm = subset[:]  # kopia!
 
-            choice = random.choices(letters, weights=weights)[0]
-            word.append(choice)
+        best_local = [float('inf'), None]
 
-            counts[choice] -= 1
-            if counts[choice] == 0:
-                del counts[choice]
+        # KLUCZ: fixujemy pierwszy element
+        permutacje(perm, 1, best_local, miasta)
 
-        # check condition
-        ok = True
-        for i in range(len(word) - 1):
-            if word[i] == word[i+1]:
-                ok = False
-                break
+        # zapis najlepszego
+        if best_local[1] is not None and best_local[0] < global_best[0]:
+            global_best[0] = best_local[0]
+            global_best[1] = best_local[1][:]
 
-        if ok:
-            good += 1
+    # wynik
+    if global_best[1] is None:
+        print("Nie znaleziono trasy!")
+    else:
+        najlepsza_trasa = [str(miasta[i]) for i in global_best[1]]
+        print("Najlepsza trasa:", najlepsza_trasa)
+        print("Długość:", global_best[0])
 
-    return good / trials
-# =========================
-# MAIN TEST
-# =========================
-N = 10000
-K = 10
 
-lin = LinearGenerator(16807, 0, 2**31 - 1, seed=1)
-reg = RegisterGenerator(7, 3, seed=15)
+# ---------- URUCHOMIENIE ----------
+tsp_dla_podzbiorow("MPI lab 1 - spain.txt", n=6, m=6)
 
-lin_data = [lin.generate_probability() for _ in range(N)]
-reg_data = [reg.generate_probability() for _ in range(N)]
 
-lin_buckets = split_into_buckets(lin_data, K)
-reg_buckets = split_into_buckets(reg_data, K)
+#PODPUNKT 4######################3
+import random
 
-print("Chi2 linear:", chi_square_test(lin_buckets, N))
-print("Chi2 register:", chi_square_test(reg_buckets, N))
+def suma_populacji_bez_powtorzen(miasta, kombinacja):
+    return sum(miasta[i].population for i in set(kombinacja))
 
-print("Monte Carlo heads:", monte_carlo_heads(1000, 10, 3))
-print("Area:", monte_carlo_area(100000, 0.5))
-print("Mississippi:", mississippi_mc(1000000))  # heavy!
+
+def prawdopodobienstwo(plik, n, m, proby=100000):
+    miasta = wczytaj_miasta(plik, n)
+
+    total_pop = sum(city.population for city in miasta)
+    dol = 0.4 * total_pop
+    gora = 0.6 * total_pop
+
+    trafione = 0
+
+    for _ in range(proby):
+        # losowanie z powtórzeniami
+        kombinacja = [random.randint(0, n-1) for _ in range(m)]
+
+        # liczenie bez powtórzeń
+        pop = suma_populacji_bez_powtorzen(miasta, kombinacja)
+
+        if dol <= pop <= gora:
+            trafione += 1
+
+    return trafione / proby
+
+
+# uruchomienie
+p = prawdopodobienstwo("MPI lab 1 - spain.txt", n=6, m=4)
+print("Prawdopodobieństwo:", p)
